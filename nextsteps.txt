@@ -1,0 +1,154 @@
+# digitalSTROM Heating Control Add-On - Development Plan
+
+## Project Overview
+**Goal:** Develop a dSS JavaScript add-on that automatically controls heating when doors/windows open
+**Functionality:**
+- Monitor door/window sensors in configurable rooms
+- Set heating to "cold" when door/window opens
+- Restore original heating state when door/window closes
+- Handle multiple rooms and sensors
+- Persist configuration and state
+
+## Confirmed Technical Approach
+- **dSS JavaScript Add-On** (runs directly on digitalSTROM Server)
+- Uses built-in JavaScript interpreter
+- Access to dSS Scripting API for heating control and sensor events
+- Packaged installation on dSS
+
+## Key Requirements Analysis
+1. **Sensor Integration**
+   - Door/window sensors (binary sensors)
+   - Event-driven architecture for real-time response
+
+2. **Temperature Control**
+   - Access to room temperature setpoint control
+   - Save current target temperature before modification
+   - Set temperature to "cold" value (e.g., 16°C) when door/window opens
+   - Restore original target temperature when closing
+
+3. **Room Configuration**
+   - User interface to select monitored rooms
+   - Map sensors to rooms
+   - Configure "cold" temperature per room
+   - Enable/disable per room
+
+4. **State Management**
+   - Track original temperature setpoints per room
+   - Handle overlapping events (multiple sensors per room)
+   - Persist state across dSS restarts
+
+## Research Findings
+- digitalSTROM supports room temperature control and setpoints
+- Temperature control is more elegant than direct valve control
+- Sensor data available through dSS API
+- JavaScript add-ons have access to device control and events
+- Works with existing heating schedules and automation
+
+## Development Environment Requirements
+- digitalSTROM Server (dSS) for testing
+- JavaScript development tools
+- Access to dSS developer documentation
+- Understanding of dSS add-on packaging format
+
+## Detailed Task List
+
+### Phase 1: Setup & Research
+1. **Research dSS JavaScript API documentation**
+   - Find official dSS JavaScript API docs
+   - Study temperature setpoint control APIs
+   - Understand sensor event handling
+   - Learn add-on structure and packaging
+
+2. **Create basic add-on structure**
+   - Set up JavaScript add-on file structure
+   - Create manifest file
+   - Set up main script file
+   - Create configuration files
+
+### Phase 2: Core Functionality
+3. **Implement sensor event detection**
+   - Detect door/window sensor state changes
+   - Handle open/close events in real-time
+   - Create event listeners for sensor updates
+
+4. **Implement temperature control functions**
+   - Read current temperature setpoints
+   - Set temperature to "cold" value (e.g., 16°C)
+   - Interface with room temperature control API
+
+5. **Create state storage system**
+   - Store original temperature setpoints per room
+   - Persist data across dSS restarts
+   - Handle configuration storage
+
+### Phase 3: Room Management
+6. **Implement room-sensor mapping**
+   - Map door/window sensors to rooms
+   - Handle multiple sensors per room
+   - Manage sensor-room relationships
+
+7. **Create configuration interface**
+   - UI for selecting rooms to monitor
+   - Interface for sensor-room mapping
+   - Enable/disable functionality per room
+
+### Phase 4: Advanced Logic
+8. **Implement temperature restoration logic**
+   - Restore original temperature setpoints when doors/windows close
+   - Handle automatic schedule changes during open period
+   - Manage overlapping events (multiple sensors)
+
+9. **Add error handling and logging**
+   - Comprehensive error handling
+   - Debug logging for troubleshooting
+   - Status monitoring and alerts
+
+### Phase 5: Deployment
+10. **Create add-on packaging**
+    - Package for dSS installation
+    - Create installation manifest
+    - Test installation process
+
+11. **Write user documentation**
+    - Installation guide
+    - Configuration instructions
+    - Usage examples and troubleshooting
+
+## Success Criteria
+- [ ] Add-on successfully installs on dSS
+- [ ] Detects door/window sensor events reliably
+- [ ] Controls room temperature setpoints correctly
+- [ ] Saves and restores temperature setpoints
+- [ ] Provides user-friendly configuration
+- [ ] Handles multiple rooms and sensors
+- [ ] Persists settings across restarts
+- [ ] Includes comprehensive documentation
+
+## Key Benefits of Temperature Control Approach
+- **Integration**: Works seamlessly with existing heating schedules
+- **Flexibility**: Allows different "cold" temperatures per room
+- **Compatibility**: Works with various heating system types
+- **Elegance**: Less invasive than direct valve control
+- **Automation**: Respects other temperature automations
+
+## Manual Temperature Change Policy (Decision)
+- No manual override while window/door is open (enforced)
+- Debounce revert: If user changes setpoint during open, revert to cold setpoint after 3s
+- Smart restore on close:
+  - If open duration < 30 min: restore original setpoint
+  - If open duration ≥ 30 min or schedule changed: set to scheduled setpoint
+- Compare-and-swap safety: Only overwrite on close if current equals the enforced cold setpoint (avoid clobbering fresh manual user input)
+
+### Default configuration
+- allow_manual_override_during_open = false
+- debounce_seconds_for_revert = 3
+- smart_restore_threshold_minutes = 30
+- close_restore_mode = "smart"
+
+### Test cases to cover
+- Manual raise during open → reverted to cold after debounce
+- Manual change allowed? (disabled) → always reverted
+- Manual change right before close → compare-and-swap prevents overwrite
+- Multiple sensors open, manual change → remains cold until all closed, then restore per policy
+- Restart during open → enforce cold; on close follow smart restore
+
