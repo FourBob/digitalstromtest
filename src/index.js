@@ -10,6 +10,10 @@ async function main() {
   const store = new FileStore();
   const adapter = new DssAdapter();
   const controller = new HeatingController(adapter, store, config);
+
+  // Wire adapter sensor events to controller
+  adapter.onSensorEvent(ev => controller.handleSensorEvent(ev));
+
   await controller.init();
 
   // keep process alive (for simulation only)
