@@ -1,0 +1,21 @@
+{
+  "rooms": {
+    "LivingRoom": {
+      "coldSetpointC": 16,
+      "sensors": ["sensor.living.window1", "sensor.living.door"],
+      "enabled": true
+    },
+    "Kitchen": {
+      "coldSetpointC": 15,
+      "sensors": ["sensor.kitchen.window"],
+      "enabled": true
+    }
+  },
+  "policy": {
+    "allowManualOverrideDuringOpen": false,
+    "debounceSecondsForRevert": 3,
+    "smartRestoreThresholdMinutes": 30,
+    "closeRestoreMode": "smart"
+  }
+}
+
